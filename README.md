@@ -115,19 +115,6 @@ pip check
 
 The recorded result was `No broken requirements found.`
 
-Running on Slurm
-----------------
-
-On a Slurm cluster, first start any fresh interactive GPU allocation according
-to the local cluster policy, for example:
-
-```bash
-salloc --gres=gpu:1 --cpus-per-task=4 --mem=16G --time=01:00:00
-```
-
-Then run the same commands in that allocated shell. The reproduction commands
-below intentionally do not depend on a fixed Slurm job id.
-
 Project Layout
 --------------
 
@@ -152,12 +139,26 @@ Asset Preparation
 -----------------
 
 If the prepared files already exist, this step is optional. To regenerate them,
-place the Assignment 3 repository at `./trustworthy-ai-assignment3` or pass its
+clone the Assignment 3 repository inside this project directory:
+
+```bash
+git clone https://github.com/ANHANYOUNG/trustworthy-ai-assignment3.git
+```
+
+The default preparation script expects the Assignment 3 repository at
+`./trustworthy-ai-assignment3`. If the repository is somewhere else, pass its
 path with `--assignment3-root`:
 
 ```bash
 conda activate trustworthy-ai-a4
 python prep/prepare_a3_assets.py
+python prep/make_mnist_wide_vnnlib.py
+```
+
+Alternative path example:
+
+```bash
+python prep/prepare_a3_assets.py --assignment3-root /path/to/trustworthy-ai-assignment3
 python prep/make_mnist_wide_vnnlib.py
 ```
 
