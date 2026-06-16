@@ -1,0 +1,4 @@
+epsilon,tag,config,abcrown_status,abcrown_runtime_seconds,abcrown_result_line,marabou_status,marabou_runtime_seconds,abcrown_output
+1.0,mnist_wide_eps_1,configs/mnist_wide_eps_1.yaml,verified,7.425671946257353,Result: unsat,UNSAT,1.6629628688097,results/abcrown/mnist_wide_eps_1/output.txt
+5.0,mnist_wide_eps_5,configs/mnist_wide_eps_5.yaml,verified,7.557472987100482,Result: unsat,UNSAT,9.430678863078356,results/abcrown/mnist_wide_eps_5/output.txt
+10.0,mnist_wide_eps_10,configs/mnist_wide_eps_10.yaml,falsified,6.812589010223746,Result: sat,SAT+TIMEOUT,145.86427521985024,results/abcrown/mnist_wide_eps_10/output.txt
