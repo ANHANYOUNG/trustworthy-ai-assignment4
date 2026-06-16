@@ -1,29 +1,40 @@
 trustworthy-ai-assignment4
 ==========================
 
-Environment setup for Assignment #4: neural network verification with
+Assignment 4 implementation for neural network verification with
 alpha-beta-CROWN.
 
-Current Status
---------------
+This repository verifies an external ONNX model, the MNIST wide MLP from
+Assignment 3, under local L-infinity robustness specifications. The same model
+and sample were previously checked with Marabou, so the results include a
+direct alpha-beta-CROWN vs. Marabou comparison.
 
-The conda environment setup has been completed on the Slurm GPU allocation
-`674695` using `srun --overlap`.
+Environment
+-----------
 
-Environment:
+Tested environment:
 
 - Conda environment: `trustworthy-ai-a4`
 - Python: 3.11
 - PyTorch: 2.8.0+cu128
 - CUDA runtime in PyTorch: 12.8
-- Verified GPU node/device: `n015`, NVIDIA A10
-- alpha-beta-CROWN: editable install from `./alpha-beta-CROWN`
-- auto_LiRPA: editable install from `./alpha-beta-CROWN/auto_LiRPA`
+- GPU used for the recorded run: NVIDIA A10
+- alpha-beta-CROWN: local editable install from `./alpha-beta-CROWN`
+- auto_LiRPA: local editable install from `./alpha-beta-CROWN/auto_LiRPA`
 
-Setup Commands
---------------
+A CUDA-capable GPU is expected because the provided YAML files set
+`general.device: cuda`.
 
-Initialize the alpha-beta-CROWN submodule:
+Setup
+-----
+
+Clone or initialize alpha-beta-CROWN in the repository root:
+
+```bash
+git clone --recursive https://github.com/Verified-Intelligence/alpha-beta-CROWN.git
+```
+
+If `alpha-beta-CROWN/` already exists, make sure its submodules are initialized:
 
 ```bash
 git -C alpha-beta-CROWN submodule update --init --recursive
@@ -33,28 +44,24 @@ Create the conda environment from the official alpha-beta-CROWN environment
 file:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
 source ~/miniconda3/etc/profile.d/conda.sh
 conda env create -y -n trustworthy-ai-a4 \
   -f alpha-beta-CROWN/complete_verifier/environment_pyt280.yaml
-'
 ```
 
-Install the local verifier packages in editable mode:
+Activate the environment and install the local verifier packages:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
-source ~/miniconda3/etc/profile.d/conda.sh
 conda activate trustworthy-ai-a4
 pip install --no-deps -e alpha-beta-CROWN/auto_LiRPA
 pip install --no-deps -e alpha-beta-CROWN
-'
 ```
 
-Activate the environment:
+Install from `requirements.txt` only if you need to recreate the package set
+manually:
 
 ```bash
-conda activate trustworthy-ai-a4
+pip install -r requirements.txt
 ```
 
 Environment Checks
@@ -63,85 +70,130 @@ Environment Checks
 Check CUDA and key packages:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
-source ~/miniconda3/etc/profile.d/conda.sh
 conda activate trustworthy-ai-a4
 python -c "import torch, auto_LiRPA, onnx, onnxruntime; \
 print(torch.__version__, torch.version.cuda, torch.cuda.is_available()); \
-print(torch.cuda.get_device_name(0)); \
+print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no cuda'); \
 print(auto_LiRPA.__version__, onnx.__version__, onnxruntime.__version__)"
-'
 ```
 
-Observed result:
+Expected package versions from the recorded run:
 
 - `torch 2.8.0+cu128`
 - `cuda_available True`
-- `device NVIDIA A10`
 - `auto_LiRPA 0.7.1`
 - `onnx 1.19.1`
 - `onnxruntime 1.23.2`
 
-alpha-beta-CROWN CLI check:
+Check the alpha-beta-CROWN CLI:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
-source ~/miniconda3/etc/profile.d/conda.sh
 conda activate trustworthy-ai-a4
 cd alpha-beta-CROWN/complete_verifier
 python abcrown.py --help
-'
+cd ../..
 ```
 
-Provided Example Check
-----------------------
-
-A small built-in tutorial configuration was run successfully:
+Optional built-in example check:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
-source ~/miniconda3/etc/profile.d/conda.sh
 conda activate trustworthy-ai-a4
 cd alpha-beta-CROWN/complete_verifier
 python abcrown.py --config exp_configs/tutorial_examples/custom_specs.yaml
-'
+cd ../..
 ```
 
-Observed result:
-
-- Result: `safe-incomplete`
-- Final verified accuracy: `100.0%`
-- Total examples: `1`
-- Total verified: `1`
-- Total falsified: `0`
-- Timeout: `0`
-- Runtime: about `0.8` to `0.9` seconds
+The recorded built-in example result was `safe-incomplete` with final verified
+accuracy `100.0%`.
 
 Dependency check:
 
 ```bash
-srun --overlap --jobid=674695 bash -lc '
-source ~/miniconda3/etc/profile.d/conda.sh
 conda activate trustworthy-ai-a4
 pip check
-'
 ```
 
-Observed result:
+The recorded result was `No broken requirements found.`
 
-- `No broken requirements found.`
+Running on Slurm
+----------------
 
-Assignment Implementation Notes
--------------------------------
+On a Slurm cluster, first start any fresh interactive GPU allocation according
+to the local cluster policy, for example:
 
-The environment setup is complete. The assignment-specific external model,
-dataset sample, YAML configuration, `test.py`, and final report will be added
-in the implementation stage.
+```bash
+salloc --gres=gpu:1 --cpus-per-task=4 --mem=16G --time=01:00:00
+```
 
-Expected final deliverables:
+Then run the same commands in that allocated shell. The reproduction commands
+below intentionally do not depend on a fixed Slurm job id.
 
-- `requirements.txt` or environment file
-- `test.py`
-- YAML configuration file(s)
-- `report.pdf`
-- `README.md`
+Project Layout
+--------------
+
+- `prep/prepare_a3_assets.py`: copies the Assignment 3 ONNX model, metadata,
+  sample, and Marabou baseline results into this repository.
+- `prep/make_mnist_wide_vnnlib.py`: generates alpha-beta-CROWN VNNLIB specs
+  for epsilons `1`, `5`, and `10`.
+- `configs/`: alpha-beta-CROWN YAML files for the three epsilon values.
+- `models/`: copied Assignment 3 MNIST-wide ONNX model and metadata.
+- `data/`: copied Assignment 3 MNIST sample.
+- `specs/mnist_wide/`: generated VNNLIB robustness specifications.
+- `results/marabou_baseline/`: copied Assignment 3 Marabou results.
+- `results/abcrown/`: alpha-beta-CROWN raw logs.
+- `results/abcrown_summary.csv`: combined alpha-beta-CROWN vs. Marabou summary.
+- `test.py`: reproducible runner for all three alpha-beta-CROWN experiments.
+
+The submitted repository includes the prepared model, sample, VNNLIB specs, and
+baseline result files. The `prep/` scripts are kept so the assets can be
+regenerated from a local Assignment 3 checkout if needed.
+
+Asset Preparation
+-----------------
+
+If the prepared files already exist, this step is optional. To regenerate them,
+place the Assignment 3 repository at `./trustworthy-ai-assignment3` or pass its
+path with `--assignment3-root`:
+
+```bash
+conda activate trustworthy-ai-a4
+python prep/prepare_a3_assets.py
+python prep/make_mnist_wide_vnnlib.py
+```
+
+Run Verification Experiments
+----------------------------
+
+Run all alpha-beta-CROWN experiments:
+
+```bash
+conda activate trustworthy-ai-a4
+python test.py
+```
+
+`test.py` runs:
+
+- `configs/mnist_wide_eps_1.yaml`
+- `configs/mnist_wide_eps_5.yaml`
+- `configs/mnist_wide_eps_10.yaml`
+
+It writes raw logs to `results/abcrown/<experiment>/output.txt` and writes the
+combined summary to `results/abcrown_summary.csv`.
+
+Recorded Results
+----------------
+
+| Epsilon | alpha-beta-CROWN status | alpha-beta-CROWN wall time | Marabou baseline |
+| --- | --- | ---: | --- |
+| `1.0` | `verified` (`Result: unsat`) | `7.43s` | `UNSAT`, `1.66s` |
+| `5.0` | `verified` (`Result: unsat`) | `7.56s` | `UNSAT`, `9.43s` |
+| `10.0` | `falsified` (`Result: sat`) | `6.81s` | `SAT+TIMEOUT`, `145.86s` |
+
+Interpretation:
+
+For this MNIST-wide model and sample, alpha-beta-CROWN proves robustness for
+pixel-space perturbations of epsilon `1` and `5`. At epsilon `10`, PGD finds a
+counterexample, so the local robustness property is falsified. This is
+consistent with the Assignment 3 Marabou baseline at epsilon `10`, where at
+least one adversarial target was satisfiable while other target checks timed
+out.

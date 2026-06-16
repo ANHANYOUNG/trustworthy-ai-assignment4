@@ -1,1 +1,27 @@
-*.pdf
+__pycache__/
+*.pyc
+.DS_Store
+
+# External repositories kept locally for running experiments.
+alpha-beta-CROWN/
+trustworthy-ai-assignment3/
+
+# Assignment handout, not a deliverable.
+assignment4.pdf
+
+# alpha-beta-CROWN/parser caches and transient outputs.
+*.vnnlib.compiled
+*.onnx.pkl
+*.onnx.cache
+out.txt
+out.pkl
+
+# LaTeX build artifacts.
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
