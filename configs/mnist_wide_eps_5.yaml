@@ -1,0 +1,30 @@
+general:
+  device: cuda
+  complete_verifier: bab
+  results_file: ../../results/abcrown/mnist_wide_eps_5/abcrown_results.txt
+
+model:
+  onnx_path: ../../models/mnist_wide_mlp_a3.onnx
+  input_shape: [-1, 784]
+
+specification:
+  vnnlib_path: ../../specs/mnist_wide/mnist_wide_eps_5.vnnlib
+
+attack:
+  pgd_order: before
+  pgd_steps: 100
+  pgd_restarts: 30
+
+solver:
+  batch_size: 4096
+  alpha-crown:
+    iteration: 50
+  beta-crown:
+    iteration: 20
+
+bab:
+  timeout: 180
+  branching:
+    method: kfsb
+    reduceop: min
+    candidates: 3
